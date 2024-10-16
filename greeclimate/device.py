@@ -340,8 +340,12 @@ class Device(DeviceProtocol2, Taskable):
                 )
 
         try:
+            self._update_state_complete.clear()
             await self.send(self.create_command_message(self.device_info, **props))
 
+            if wait_for > 0:
+                task = asyncio.create_task(self._update_state_complete.wait())
+                await asyncio.wait_for(task, timeout=wait_for)
         except asyncio.TimeoutError:
             raise DeviceTimeoutError
         else:
