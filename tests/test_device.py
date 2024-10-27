@@ -371,7 +371,8 @@ async def test_set_properties_not_dirty(cipher, send):
 
 
 @pytest.mark.asyncio
-async def test_set_properties(cipher, send):
+@pytest.mark.parametrize("beep", [True, False])
+async def test_set_properties(cipher, send, beep):
     """Check that state is pushed when properties are updated."""
     device = await generate_device_mock_async()
 
@@ -392,13 +393,25 @@ async def test_set_properties(cipher, send):
     device.power_save = True
     device.target_humidity = 30
 
-    def fake_send(*args, **kwargs):
+    sent_properties = {}
+
+    def fake_send(obj, *args, **kwargs):
         state = get_mock_state_on()
         device.handle_state_update(**state)
+        pack = obj["pack"]
+        sent_properties.update(dict(zip(pack["opt"], pack["p"])))
+
     send.side_effect = fake_send
 
-    await device.push_state_update()
+    await device.push_state_update(beep=beep)
     send.assert_called_once()
+
+    if not beep:
+        # To disable the beep, Buzzer_ON_OFF must be set to 1
+        assert sent_properties["Buzzer_ON_OFF"] == 1
+    else:
+        # To keep it enabled, Buzzer_ON_OFF can be omitted or set to 0
+        assert "Buzzer_ON_OFF" not in sent_properties
 
     for p in Props:
         if p not in (

@@ -314,7 +314,7 @@ class Device(DeviceProtocol2, Taskable):
 
         self._update_state_complete.set()
 
-    async def push_state_update(self, wait_for: float = 30):
+    async def push_state_update(self, wait_for: float = 30, beep: bool = True):
         """Push any pending state updates to the unit
 
         Args:
@@ -338,6 +338,9 @@ class Device(DeviceProtocol2, Taskable):
                 props[Props.TEMP_UNIT.value] = self._properties.get(
                     Props.TEMP_UNIT.value
                 )
+
+        if not beep:
+            props["Buzzer_ON_OFF"] = 1
 
         try:
             self._update_state_complete.clear()
