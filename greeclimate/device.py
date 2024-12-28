@@ -204,14 +204,6 @@ class Device(DeviceProtocol2, Taskable):
             DeviceTimeoutError: The device didn't respond
         """
 
-        if key:
-            if not cipher:
-                raise ValueError("cipher must be provided when key is provided")
-            else:
-                cipher.key = key
-                self.device_cipher = cipher
-                return
-
         if not self.device_info:
             raise DeviceNotBoundError
 
@@ -219,6 +211,14 @@ class Device(DeviceProtocol2, Taskable):
             self._transport, _ = await self._loop.create_datagram_endpoint(
                 lambda: self, remote_addr=(self.device_info.ip, self.device_info.port)
             )
+
+        if key:
+            if not cipher:
+                raise ValueError("cipher must be provided when key is provided")
+            else:
+                cipher.key = key
+                self.device_cipher = cipher
+                return
 
         self._logger.info("Starting device binding to %s", str(self.device_info))
 
